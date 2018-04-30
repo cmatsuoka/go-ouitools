@@ -61,6 +61,13 @@ func TestInitialization2(t *testing.T) {
 	}
 }
 
+func TestInitialization3(t *testing.T) {
+	db = NewFromBuiltIn()
+	if db == nil {
+		t.Fatal("can't load built-in database file")
+	}
+}
+
 func TestMissingDBFile(t *testing.T) {
 	db := New("bad-file")
 	if db != nil {
