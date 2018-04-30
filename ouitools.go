@@ -200,6 +200,7 @@ func (m *OuiDB) load(path string) error {
 
 		var oui [6]byte
 		var mask int
+		var err error
 
 		if i := strings.IndexByte(addr, '/'); i < 0 {
 			if oui, err = parseMAC(addr); err != nil {
