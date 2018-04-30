@@ -1,0 +1,3 @@
+package ouidb
+
+//go:generate go-bindata -prefix "assets/" -pkg ouidb -o assets.go assets/...

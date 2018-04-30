@@ -3,7 +3,9 @@ package ouidb
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
+	"io"
 	"os"
 	"regexp"
 	"sort"
@@ -173,9 +175,13 @@ func (m *OuiDB) load(path string) error {
 		return (err)
 	}
 
+	return m.loadFromReader(file)
+}
+
+func (m *OuiDB) loadFromReader(reader io.Reader) error {
 	fieldsRe := regexp.MustCompile(`^(\S+)\t+(\S+)(\s+#\s+(\S.*))?`)
 
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		text := scanner.Text()
 		if text == "" || text[0] == '#' || text[0] == '\t' {
@@ -200,6 +206,7 @@ func (m *OuiDB) load(path string) error {
 
 		var oui [6]byte
 		var mask int
+		var err error
 
 		if i := strings.IndexByte(addr, '/'); i < 0 {
 			if oui, err = parseMAC(addr); err != nil {
@@ -238,10 +245,10 @@ func (m *OuiDB) load(path string) error {
 	return nil
 }
 
-// New returns a new OUI database loaded from the specified file.
-func New(file string) *OuiDB {
+// NewFromReader returns a new OUI database loaded from the specified io.Reader.
+func NewFromReader(reader io.Reader) *OuiDB {
 	db := &OuiDB{}
-	if err := db.load(file); err != nil {
+	if err := db.loadFromReader(reader); err != nil {
 		return nil
 	}
 
@@ -249,6 +256,24 @@ func New(file string) *OuiDB {
 	sort.Sort(db.blocks24)
 
 	return db
+}
+
+// NewFromBuiltIn returns a new OUI database loaded from the compiled-in version of oui.txt.
+func NewFromBuiltIn() *OuiDB {
+	if bs, err := Asset("oui.txt"); err != nil {
+		return nil
+	} else {
+		return NewFromReader(bytes.NewBuffer(bs))
+	}
+}
+
+// New returns a new OUI database loaded from the specified file.
+func New(path string) *OuiDB {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+	return NewFromReader(file)
 }
 
 func (db *OuiDB) blockLookup(address [6]byte) addressBlock {
