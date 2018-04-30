@@ -4,6 +4,7 @@ package ouidb
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 )
 
@@ -44,6 +45,17 @@ func invalid(t *testing.T, mac string) {
 
 func TestInitialization(t *testing.T) {
 	db = New("oui.txt")
+	if db == nil {
+		t.Fatal("can't load database file oui.txt")
+	}
+}
+
+func TestInitialization2(t *testing.T) {
+	file, err := os.Open("oui.txt")
+	if err != nil {
+		t.Fatalf("can't load database file: %s", err)
+	}
+	db = NewFromReader(file)
 	if db == nil {
 		t.Fatal("can't load database file oui.txt")
 	}
